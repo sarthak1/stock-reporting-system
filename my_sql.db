@@ -1,0 +1,31 @@
+-- Table: Stock_Master
+CREATE TABLE Stock_Master (
+    StockID INT AUTO_INCREMENT PRIMARY KEY,
+    StockName VARCHAR(255) NOT NULL,
+    Category VARCHAR(100) NOT NULL,
+    UnitOfMeasure VARCHAR(50) NOT NULL,
+    InitialStock INT NOT NULL
+);
+
+-- Table: StockTransactions
+CREATE TABLE StockTransactions (
+    TransactionID INT AUTO_INCREMENT PRIMARY KEY,
+    StockID INT NOT NULL,
+    TransactionDate DATE NOT NULL,
+    TransactionType ENUM('INBOUND', 'OUTBOUND') NOT NULL,
+    Quantity INT NOT NULL,
+    Remarks TEXT,
+    FOREIGN KEY (StockID) REFERENCES Stock_Master(StockID)
+);
+
+-- Table: DailyStockSummary_Master
+CREATE TABLE DailyStockSummary_Master (
+    SummaryID INT AUTO_INCREMENT PRIMARY KEY,
+    StockID INT NOT NULL,
+    Date DATE NOT NULL,
+    OpeningQuantity INT NOT NULL,
+    InboundQuantity INT NOT NULL,
+    OutboundQuantity INT NOT NULL,
+    ClosingQuantity INT NOT NULL,
+    FOREIGN KEY (StockID) REFERENCES Stock_Master(StockID)
+);
