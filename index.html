@@ -1,0 +1,27 @@
+<div ng-app="StockApp" ng-controller="StockController">
+  <h2>Record Transaction</h2>
+  <form ng-submit="recordTransaction()">
+    <label>Stock ID:</label>
+    <input type="number" ng-model="transaction.stock_id" required />
+    <label>Date:</label>
+    <input type="date" ng-model="transaction.transaction_date" required />
+    <label>Type:</label>
+    <select ng-model="transaction.transaction_type" required>
+      <option value="INBOUND">Inbound</option>
+      <option value="OUTBOUND">Outbound</option>
+    </select>
+    <label>Quantity:</label>
+    <input type="number" ng-model="transaction.quantity" required />
+    <label>Remarks:</label>
+    <textarea ng-model="transaction.remarks"></textarea>
+    <button type="submit">Submit</button>
+  </form>
+
+  <h2>Calculate Daily Summary</h2>
+  <form ng-submit="calculateSummary()">
+    <label>Date:</label>
+    <input type="date" ng-model="summary.date" required />
+    <button type="submit">Calculate</button>
+  </form>
+</div>
+
