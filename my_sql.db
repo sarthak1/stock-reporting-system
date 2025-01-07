@@ -30,3 +30,57 @@ CREATE TABLE Daily_Stock_Summary (
     FOREIGN KEY (StockID) REFERENCES Stock_Master(StockID) ON DELETE CASCADE, -- Cascade deletes to maintain referential integrity.
     UNIQUE (StockID, Date) -- Ensures only one summary per stock per day.
 );
+
+
+-- 1. Insert Stock Transaction:
+INSERT INTO Stock_Transactions (StockID, TransactionDate, TransactionType, Quantity, Remarks)
+VALUES (1, '2025-01-06', 'I', 50, 'Restock shipment');
+
+-- 2. Calculate Daily Summary:
+SELECT 
+    sm.StockID,
+    sm.StockName,
+    COALESCE(
+        (SELECT ClosingQuantity 
+         FROM Daily_Stock_Summary 
+         WHERE StockID = sm.StockID AND Date = DATE_SUB('2025-01-06', INTERVAL 1 DAY)), 
+        sm.InitialStock
+    ) AS OpeningQuantity,
+    COALESCE(SUM(CASE WHEN st.TransactionType = 'I' THEN st.Quantity ELSE 0 END), 0) AS InboundQuantity,
+    COALESCE(SUM(CASE WHEN st.TransactionType = 'O' THEN st.Quantity ELSE 0 END), 0) AS OutboundQuantity,
+    (COALESCE(
+        (SELECT ClosingQuantity 
+         FROM Daily_Stock_Summary 
+         WHERE StockID = sm.StockID AND Date = DATE_SUB('2025-01-06', INTERVAL 1 DAY)), 
+        sm.InitialStock
+    ) 
+    + COALESCE(SUM(CASE WHEN st.TransactionType = 'I' THEN st.Quantity ELSE 0 END), 0)
+    - COALESCE(SUM(CASE WHEN st.TransactionType = 'O' THEN st.Quantity ELSE 0 END), 0)) AS ClosingQuantity
+FROM Stock_Master sm
+LEFT JOIN Stock_Transactions st ON sm.StockID = st.StockID AND st.TransactionDate = '2025-01-06'
+GROUP BY sm.StockID, sm.StockName;
+
+-- 3. Insert Daily Summary:
+INSERT INTO Daily_Stock_Summary (StockID, Date, OpeningQuantity, InboundQuantity, OutboundQuantity, ClosingQuantity)
+SELECT 
+    sm.StockID,
+    '2025-01-06' AS Date,
+    COALESCE(
+        (SELECT ClosingQuantity 
+         FROM Daily_Stock_Summary 
+         WHERE StockID = sm.StockID AND Date = DATE_SUB('2025-01-06', INTERVAL 1 DAY)), 
+        sm.InitialStock
+    ) AS OpeningQuantity,
+    COALESCE(SUM(CASE WHEN st.TransactionType = 'I' THEN st.Quantity ELSE 0 END), 0) AS InboundQuantity,
+    COALESCE(SUM(CASE WHEN st.TransactionType = 'O' THEN st.Quantity ELSE 0 END), 0) AS OutboundQuantity,
+    (COALESCE(
+        (SELECT ClosingQuantity 
+         FROM Daily_Stock_Summary 
+         WHERE StockID = sm.StockID AND Date = DATE_SUB('2025-01-06', INTERVAL 1 DAY)), 
+        sm.InitialStock
+    ) 
+    + COALESCE(SUM(CASE WHEN st.TransactionType = 'I' THEN st.Quantity ELSE 0 END), 0)
+    - COALESCE(SUM(CASE WHEN st.TransactionType = 'O' THEN st.Quantity ELSE 0 END), 0)) AS ClosingQuantity
+FROM Stock_Master sm
+LEFT JOIN Stock_Transactions st ON sm.StockID = st.StockID AND st.TransactionDate = '2025-01-06'
+GROUP BY sm.StockID;
