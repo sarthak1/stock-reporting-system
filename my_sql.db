@@ -1,31 +1,32 @@
 -- Table: Stock_Master
 CREATE TABLE Stock_Master (
     StockID INT AUTO_INCREMENT PRIMARY KEY,
-    StockName VARCHAR(255) NOT NULL,
+    StockName VARCHAR(255) NOT NULL UNIQUE, -- Ensures unique stock names if applicable.
     Category VARCHAR(100) NOT NULL,
     UnitOfMeasure VARCHAR(50) NOT NULL,
-    InitialStock INT NOT NULL
+    InitialStock INT NOT NULL CHECK (InitialStock >= 0) -- Ensure non-negative initial stock.
 );
 
--- Table: StockTransactions
-CREATE TABLE StockTransactions (
+-- Table: Stock_Transactions
+CREATE TABLE Stock_Transactions (
     TransactionID INT AUTO_INCREMENT PRIMARY KEY,
     StockID INT NOT NULL,
     TransactionDate DATE NOT NULL,
-    TransactionType ENUM('INBOUND', 'OUTBOUND') NOT NULL,
-    Quantity INT NOT NULL,
+    TransactionType CHAR(1) CHECK (TransactionType IN ('I', 'O')), -- Use CHAR(1) instead of ENUM for simplicity ('I' for Inbound, 'O' for Outbound).
+    Quantity INT NOT NULL CHECK (Quantity > 0), -- Enforce positive transaction quantities.
     Remarks TEXT,
-    FOREIGN KEY (StockID) REFERENCES Stock_Master(StockID)
+    FOREIGN KEY (StockID) REFERENCES Stock_Master(StockID) ON DELETE CASCADE -- Cascade deletes to maintain referential integrity.
 );
 
--- Table: DailyStockSummary_Master
-CREATE TABLE DailyStockSummary_Master (
+-- Table: Daily_Stock_Summary
+CREATE TABLE Daily_Stock_Summary (
     SummaryID INT AUTO_INCREMENT PRIMARY KEY,
     StockID INT NOT NULL,
     Date DATE NOT NULL,
-    OpeningQuantity INT NOT NULL,
-    InboundQuantity INT NOT NULL,
-    OutboundQuantity INT NOT NULL,
-    ClosingQuantity INT NOT NULL,
-    FOREIGN KEY (StockID) REFERENCES Stock_Master(StockID)
+    OpeningQuantity INT NOT NULL CHECK (OpeningQuantity >= 0), -- Enforce non-negative opening quantity.
+    InboundQuantity INT NOT NULL CHECK (InboundQuantity >= 0), -- Enforce non-negative inbound quantity.
+    OutboundQuantity INT NOT NULL CHECK (OutboundQuantity >= 0), -- Enforce non-negative outbound quantity.
+    ClosingQuantity INT NOT NULL CHECK (ClosingQuantity >= 0), -- Enforce non-negative closing quantity.
+    FOREIGN KEY (StockID) REFERENCES Stock_Master(StockID) ON DELETE CASCADE, -- Cascade deletes to maintain referential integrity.
+    UNIQUE (StockID, Date) -- Ensures only one summary per stock per day.
 );
